@@ -1,0 +1,63 @@
+---
+title: "Untitled"
+author: "alejandro"
+date: "2024-03-08"
+output: github_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+
+```{r}
+
+dat <- read_csv("./data/data.csv")
+
+```
+
+```{r, pivot_longer}
+
+dat_long <- dat %>%
+  pivot_longer(
+    cols = -info,
+    names_to = "thing",
+    values_to = "values")
+
+```
+
+
+```{r, measures}
+
+dat_sep <- mutate(dat, lexical_stress = if_else(grepl("_1$", info), 1, 2))
+
+dat_sep |>
+  pivot_longer(cols = durationV:int, names_to = "measure", values_to = "val") |>
+  group_by(lexical_stress, measure) |>
+  summarise(avg = mean(val)) |>
+  pivot_wider(names_from = "lexical_stress", values_from = "avg")
+
+```
+
+```{r, plots}
+
+dat_sep %>%
+  pivot_longer(cols = durationV:int, names_to = "measure", values_to = "val") %>%
+  group_by(lexical_stress, measure) %>%
+  summarise(avg = mean(val)) %>%
+  ggplot(aes(x = measure, y = avg, fill = as.factor(lexical_stress))) +
+  geom_boxplot() +
+  labs(x = "Measure", y = "Average Value", fill = "Lexical Stress")
+
+
+dat_long %>%
+  ggplot() +
+  aes(x = thing, y = values) +
+  geom_point()
+
+```
+
